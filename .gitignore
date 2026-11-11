@@ -1,0 +1,6 @@
+.venv
+__pycache__
+.Ds_Store
+node_modules
+*.sqlite*
+
