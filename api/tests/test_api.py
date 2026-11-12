@@ -1,6 +1,26 @@
 import pytest
 
 
+# ---------- / ----------
+
+def test_index_returns_html_intro(client):
+    """/ 는 200 과 HTML 소개 페이지를 돌려주고, 엔드포인트와 현재 구현체를 안내한다."""
+    res = client.get("/")
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("text/html")
+    body = res.text
+    assert body.lstrip().lower().startswith("<!doctype html>")
+    assert "delivery-eta" in body
+    for path in ("/health", "/eta", "/docs"):
+        assert path in body
+    assert "<code>rule</code>" in body
+
+
+def test_index_rejects_post(client):
+    """/ 는 GET 전용이라 POST 는 405 를 돌려준다."""
+    assert client.post("/").status_code == 405
+
+
 # ---------- /health ----------
 
 def test_health_returns_ok_and_model(client):

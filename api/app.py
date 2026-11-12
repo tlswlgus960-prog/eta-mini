@@ -1,6 +1,10 @@
 import importlib
 import os
-from fastapi import FastAPI
+from pathlib import Path
+
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 MODEL_IMPL = os.getenv("MODEL_IMPL", "rule")
@@ -18,6 +22,14 @@ class EtaResponse(BaseModel):
     model: str  # 어떤 구현체가 낸 예측인지 (장애 추적용)
 
 app = FastAPI(title="delivery-eta")
+
+templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
+
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def index(request: Request) -> HTMLResponse:
+    """서비스를 소개하는 HTML 페이지를 돌려준다."""
+    return templates.TemplateResponse(request, "index.html", {"model": MODEL_IMPL})
 
 @app.get("/health")
 def health() -> dict[str, str]:

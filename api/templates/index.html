@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>delivery-eta</title>
+  <style>
+    :root { --bg: #ffffff; --fg: #1f2328; --muted: #59636e; --line: #d1d9e0; --code: #f6f8fa; --accent: #0969da; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --line: #3d444d; --code: #151b23; --accent: #4493f8; }
+    }
+    body { margin: 0; background: var(--bg); color: var(--fg);
+           font: 16px/1.6 system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif; }
+    main { max-width: 720px; margin: 0 auto; padding: 48px 16px; }
+    h1 { margin: 0 0 4px; font-size: 1.8rem; }
+    h2 { margin-top: 2rem; font-size: 1.15rem; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+    p.lead { margin: 0; color: var(--muted); }
+    code, pre { font-family: ui-monospace, Consolas, monospace; font-size: 0.9em; background: var(--code); border-radius: 6px; }
+    code { padding: 1px 5px; }
+    pre { padding: 12px 14px; overflow-x: auto; border: 1px solid var(--line); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    a { color: var(--accent); }
+    .model { display: inline-block; margin-top: 12px; padding: 2px 10px; border: 1px solid var(--line); border-radius: 999px; font-size: 0.85rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>delivery-eta</h1>
+  <p class="lead">가게에서 배달지까지의 거리와 밀려 있는 주문 수로 배달 예상 시간(분)을 계산하는 API 입니다.</p>
+  <span class="model">현재 구현체: <code>{{ model }}</code></span>
+
+  <h2>엔드포인트</h2>
+  <table>
+    <tr><th>메서드</th><th>경로</th><th>설명</th></tr>
+    <tr><td><code>GET</code></td><td><code>/health</code></td><td>서비스 상태와 현재 구현체 이름</td></tr>
+    <tr><td><code>POST</code></td><td><code>/eta</code></td><td>배달 예상 시간 계산</td></tr>
+    <tr><td><code>GET</code></td><td><a href="/docs"><code>/docs</code></a></td><td>대화형 API 문서 (Swagger UI)</td></tr>
+  </table>
+
+  <h2>요청 예시</h2>
+<pre>POST /eta
+Content-Type: application/json
+
+{"distance_km": 2.0, "pending_orders": 3}</pre>
+  <p>응답</p>
+<pre>{"minutes": 22.0, "model": "{{ model }}"}</pre>
+  <p><code>distance_km</code> 는 0 이상의 숫자, <code>pending_orders</code> 는 0 이상의 정수여야 하며, 어기면 <code>422</code> 를 돌려줍니다.</p>
+</main>
+</body>
+</html>
