@@ -3,4 +3,4 @@ __pycache__
 .Ds_Store
 node_modules
 *.sqlite*
-
+artifacts

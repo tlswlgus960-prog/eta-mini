@@ -37,23 +37,3 @@ torch.save(model.state_dict(), "artifacts/dl.pt")
 json.dump({"model": "dl", "mae": mae, "baseline_mae": baseline, "hparams": HPARAMS},
           open("artifacts/metrics_dl.json", "w"), indent=2)
 print(f"dl 평균 오차 {mae:.2f}분  (기준선 rule {baseline:.2f}분)  hparams={HPARAMS}")
-
-# ── MLOps 2단계: 재현 가능한 학습 + 모델 검증 게이트 + ONNX 변환 ──
-train:
-  needs: test
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v7
-    - uses: astral-sh/setup-uv@v7
-      with:
-        enable-cache: true
-    # 학습 라이브러리(scikit-learn, torch, ONNX 변환 도구)는 pyproject.toml 의 train 그룹. 로컬과 같은 명령이다.
-    - run: mkdir -p artifacts # 커밋하지 않는 폴더라 새 checkout 에는 없다
-    - run: uv run --locked --group train python -m training.train_sklearn
-    - run: uv run --locked python -m training.validate_model sklearn # 실패하면 여기서 중단 → 배포 안 됨
-    - run: uv run --locked --group train python -m training.train_dl
-    - run: uv run --locked python -m training.validate_model dl
-    - uses: actions/upload-artifact@v7
-      with:
-        name: model-artifacts
-        path: artifacts/
