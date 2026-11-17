@@ -105,48 +105,6 @@ jobs:
           IMG_URL=$(jq -rn --arg v "$IMAGE" '$v|@uri')
           curl -fsS -X POST "${DEPLOY_HOOK}&imgURL=${IMG_URL}"
 
-      # ── EC2 배포: SSH 로 접속해 방금 올린 이미지로 컨테이너를 교체 ──
-      #    유저명은 하드코딩하지 않고 저장소 Variable(vars.SSH_USER) 에서 받는다
-      #    (Settings → Secrets and variables → Actions → Variables)
-      - name: SSH 접속 준비
-        env:
-          SSH_KEY: ${{ secrets.SSH_KEY }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
-
-      - name: EC2 배포
-        env:
-          SSH_USER: ${{ vars.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ -z "$SSH_USER" ]; then
-            echo "::error::저장소 Variable SSH_USER 가 설정되지 않았다"
-            exit 1
-          fi
-          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}/eta-api:${GITHUB_REF_NAME}"
-          echo "배포 대상: ${SSH_USER}@${SSH_HOST} ← ${IMAGE}"
-          # GITHUB_TOKEN 은 stdin 으로 넘겨 명령줄/로그에 남지 않게 한다
-          echo "$GHCR_TOKEN" | ssh -i ~/.ssh/deploy_key "${SSH_USER}@${SSH_HOST}" \
-            "docker login ghcr.io -u '${GITHUB_ACTOR}' --password-stdin \
-            && docker pull '${IMAGE}' \
-            && (docker rm -f eta-api || true) \
-            && docker run -d --name eta-api --restart unless-stopped -p 80:8080 '${IMAGE}' \
-            && docker logout ghcr.io \
-            && docker image prune -f"
-
-      - name: 배포 확인 (서버 안에서 /health)
-        env:
-          SSH_USER: ${{ vars.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-        run: |
-          ssh -i ~/.ssh/deploy_key "${SSH_USER}@${SSH_HOST}" \
-            'for i in $(seq 1 30); do curl -sf localhost:80/health && exit 0; sleep 2; done; docker logs --tail 50 eta-api; exit 1'
-
   # ── 모델 릴리스: 검증을 통과한 모델 파일을 GitHub Release 에 첨부 ──
   #    코드(태그) · 이미지(GHCR) · 모델(Release) 이 같은 버전(v1.0 등)으로 묶인다
   release:
